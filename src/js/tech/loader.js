@@ -32,38 +32,35 @@ class MediaLoader extends Component {
 
     super(player, options_, ready);
 
+    // if no sources are provides but we have a src attribute, use it. In the source
+    // loading process, we try to figure out the type, so, use it directly here.
+    if (
+      (!options.playerOptions.sources || options.playerOptions.sources.length === 0) &&
+      options.playerOptions.src
+    ) {
+      options.playerOptions.sources = [options.playerOptions.src];
+    }
+
     // If there are no sources when the player is initialized,
     // load the first supported playback technology.
 
     if (!options.playerOptions.sources || options.playerOptions.sources.length === 0) {
-      if (typeof(options.playerOptions.src) == 'undefined') {
-          for (let i = 0, j = options.playerOptions.techOrder; i < j.length; i++) {
-            const techName = toTitleCase(j[i]);
-            let tech = Tech.getTech(techName);
+      for (let i = 0, j = options.playerOptions.techOrder; i < j.length; i++) {
+        const techName = toTitleCase(j[i]);
+        let tech = Tech.getTech(techName);
 
-            // Support old behavior of techs being registered as components.
-            // Remove once that deprecated behavior is removed.
-            if (!techName) {
-              tech = Component.getComponent(techName);
-            }
+        // Support old behavior of techs being registered as components.
+        // Remove once that deprecated behavior is removed.
+        if (!techName) {
+          tech = Component.getComponent(techName);
+        }
 
-            // Check if the browser supports this technology
-            if (tech && tech.isSupported()) {
-              player.loadTech_(techName);
-              break;
-            }
-          }
+        // Check if the browser supports this technology
+        if (tech && tech.isSupported()) {
+          player.loadTech_(techName);
+          break;
         }
-        else {
-          var src = options.playerOptions.src;
-          var type = "video/" + src.slice((src.lastIndexOf(".")  - 1 >>> 0) +2 );
-          options.playerOptions.sources = [
-            {
-              type: type,
-              src: src
-            }
-          ];
-        }
+      }
     } else {
       // Loop through playback technologies (HTML5, Flash) and check for support.
       // Then load the best source.
